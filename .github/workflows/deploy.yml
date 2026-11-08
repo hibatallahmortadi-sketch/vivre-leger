@@ -1,0 +1,28 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.ORACLE_HOST }}
+          username: ${{ secrets.ORACLE_USER || 'ubuntu' }}
+          key: ${{ secrets.ORACLE_SSH_KEY }}
+          script: |
+            if [ ! -d "/var/www/vivre-leger/.git" ]; then
+              sudo mkdir -p /var/www/vivre-leger
+              sudo chown -R $USER:$USER /var/www/vivre-leger
+              git clone https://github.com/hibatallahmortadi-sketch/vivre-leger.git /var/www/vivre-leger
+            else
+              cd /var/www/vivre-leger
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+            sudo chown -R www-data:www-data /var/www/vivre-leger
